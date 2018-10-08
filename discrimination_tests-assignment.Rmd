@@ -1,0 +1,48 @@
+---
+title: "MS&E330: Tests for Discrimination"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(scales)
+
+# load data
+#STOP DATA
+#POPULTAION DATA
+
+theme_set(theme_bw())
+```
+
+# Introduction
+
+A seemingly straightforward way to check if ... Let's take police stops in XX
+as a case study. First, let's check stop counts by race:
+
+```{r}
+stops %>% count(race)
+```
+
+We need to put these counts in context in order to understand whether black
+individuals are being stopped dispropotionately. An initial check could be
+the base population. Try computing the per-capita stop rates by race:
+
+```{r}
+stops %>% 
+  count(race) %>% 
+  left_join(
+    population,
+    by = "race"
+  ) %>% 
+  mutate(stop_rate = n / num_people)
+```
+
+Clearly black and Hispanic individuals are stopped at a much higher rate than
+white individuals relative to the residential population in XXloc. However, the
+argument could be made that 
+
+testing whether disproportionate policing , we would want to 
+
+# The outcome test
+
+The outcome test, first proposed by Gary Becker in 1957, gets around the 
