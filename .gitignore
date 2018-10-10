@@ -1,0 +1,11 @@
+# R project files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Notebook files
+.ipynb_checkpoints/
+
+# Other files
+*.swp
