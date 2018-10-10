@@ -39,10 +39,17 @@ stops %>%
 
 Clearly black and Hispanic individuals are stopped at a much higher rate than
 white individuals relative to the residential population in XXloc. However, the
-argument could be made that 
+argument could be made that black individuals are stopped more often then white individuals because they exhibit suspicious behavior at higher rates than white individuals. The implication of this statement is that instead of comparing the racial distribution of stops to the base racial distribution of population, we should be comparing (or "benchmarking") to the underlying racial distribution of suspicious behavior being exhibited. 
 
-testing whether disproportionate policing , we would want to 
+However, the underlying distribution of who is exhibiting suspicious behavior is nearly impossible to obtain. Some common proxies include benchmarking to arrests
+or violent arrests. However, those are both problematic for a variety of reasons
+
+(**Discuss with a partner:** Why might using arrests or violent arrests be problematic? What benefits, drawbacks, and assumptions come with each of these two benchmarks?)
 
 # The outcome test
 
-The outcome test, first proposed by Gary Becker in 1957, gets around the 
+The outcome test, first proposed by Gary Becker in 1957, gets around the "benchmarking problem" by focusing on differences in stop outcome (for example, recovery of weapons), and checkking if outcomes differ systematically between whites and minorities. If stopped minorities are less likely than whites to have weapons, it suggests that the bar for stopping minorities is lower than the bar for stopping whites. That lower bar is de facto descrimination.
+
+(**Discuss with a partner:** How could the outcome test be applied to test discrimination/bias in the case of lending decisions? Bail bond-setting decisions? Editorial acceptance decisions? What would evidence of bias against minorities look like in each of these three decision-making arenas?)
+
+Jumping back to our XX data, to apply 
