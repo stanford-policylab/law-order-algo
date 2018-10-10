@@ -1,2 +1,2 @@
-# mse330-assignments
-Walkthrough assignments for MS&E330: Law, Order, and Algorithms
+# Law, bias, and algorithms
+Course material for Law, Bias, and Algorithms
