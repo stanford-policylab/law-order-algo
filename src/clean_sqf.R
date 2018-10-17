@@ -89,12 +89,16 @@ clean_df <- full_df %>%
       plyr::mapvalues(
         suspect_race,
         c('black', 'black hispanic', 'white', 'white hispanic'),
-        c('Black', 'Hispanic', 'White', 'Hispanic')),
-      c('White','Black', 'Hispanic'))
+        c('black', 'hispanic', 'white', 'hispanic')),
+      c('white','black', 'hispanic'))
   ) %>%
   filter(!is.na(suspect_race),
-         !is.na(suspect_sex)) %>%
-  mutate_at(vars(found_weapon, frisked), funs(as.logical))
+         !is.na(suspect_sex),
+         complete.cases(.)) %>%
+  mutate_at(vars(found_weapon, frisked), funs(as.logical)) %>%
+  mutate(suspected_crime = fct_lump(suspected_crime, 10, other_level = "other"),
+         suspect_hair = fct_lump(suspect_hair, 8, other_level = "other"),
+         suspect_eye = fct_lump(suspect_eye, 8, other_level = "other"))
 
 # Sample and save ---------------------------------------------------------
 cat(sprintf("Sampling %d rows\n", SAMPLE_SIZE))
