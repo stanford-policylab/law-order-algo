@@ -1,0 +1,1202 @@
+---
+title: "`R` crash course, eXtreme"
+author: "Jongbin Jung"
+output:
+  html_document:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+---
+
+```{r, echo=FALSE, results='hide', message=FALSE}
+options(width=50)
+library('tidyverse')
+```
+
+## Dependencies
+
+- Please download and install
+    - Latest version `R`
+      (*free* -- GPL -- from <https://www.r-project.org/>)
+    - Latest version of `Rstudio`
+      (also *free* -- [AGPL](http://www.gnu.org/licenses/agpl-3.0.txt) -- from <https://www.rstudio.com/>)
+
+- Alternatively, use cloud services such as
+  [MatrixDS](http://matrixds.com) (http://matrixds.com)
+
+
+## Using `Rstudio`
+- Save/load scripts as text files named `*.R`
+- Save/load environment as `.Rdata` file
+- `Ctrl` + `L`: Clear console
+- `Ctrl` + `#`: Focus on panel `#`
+- `Ctrl` + `Enter`: Execute line/selection
+- `Ctrl` + `Shift` + `A`: Auto-format selected code
+- `Ctrl` + `Shift` + `C`: Comment/Uncomment selection
+- `Ctrl` + `Shift` + `/`: Reflow comments
+- Many more (if you're willing to explore)
+
+# `R` Basics
+
+## Working Directory
+ - Working directory (`wd`) is where your `R` session will load/save files
+ - To see where your current working directory is, run
+```{r, eval=FALSE}
+getwd()
+```
+ - To set the working directory to desired `path`, run
+```{r, eval=FALSE}
+setwd("path")
+```
+
+ - Note that `~` is replaced with your `HOME` directory, e.g.
+ `C:\Users\Username\Documents` in windows
+ - Use forward slashes (`/`), even on Windows!
+ 
+```{r, eval=FALSE, tidy=TRUE}
+setwd("~/R")
+```
+
+ - **Never** set the working directory to an absolute path in your `R` script
+     - Even better, organize your scripts such that you never have to change the
+     working directory
+     - `setwd()` is best reserved for that time when you started `R` from the
+     wrong directory
+
+## Assignment
+ - Convention for assigning values to variables is an arrow(`<-`)[^1]
+ - Direction of arrow indicates direction of assignment
+```{r, eval=FALSE}
+A <- 12
+A  # 12
+A + 3 -> B
+B  # 15
+24 -> A
+A  # 24
+```
+ - The equal sign (`=`) also works, but only for assignment to the left, e.g.
+```{r, eval=FALSE}
+A = 12  # good
+12 = A  # BAD
+```
+
+[^1]: There are also double arrows (`<<-`) that do something slightly different. We won't talk about it, but if you're interested, see [here](https://stackoverflow.com/questions/2628621/how-do-you-use-scoping-assignment-in-r)
+
+## Strings
+- A `String` variable can be declared in either double quotes(`""`) or
+single quotes (`''`)
+```{r}
+s <- "This is a valid string"
+s
+s <- 'and so is this'
+s
+```
+
+## Vectors
+
+### Creating vectors with `c()`
+ - Vectors are the building blocks of `R` --- even a single variable is actually
+ an "atomic" vector (vector of size 1)
+ - Vectors in `R` are created by *c*oncatenating a series of elements
+```{r}
+X <- c(1,2,3)
+X  # vector of numbers (1, 2, 3)
+Y <- c('this', 'that', 'those')
+Y  # this is a vector of Strings
+```
+
+### Generate sequence with `seq()`
+- Create a vector from a sequence with `seq(from, to, by=1)`
+```{r}
+seq(1, 10)
+seq(1, 10, 2)
+```
+- Use short-hand `from:to` if you're incrementing by one
+```{r}
+1:10
+```
+
+### Repeat values with `rep()`
+- Use `rep()` to repeat values
+```{r}
+rep(13, 4)
+rep('Yes!', 3)
+rep(c('Sat.', 'Sun.'), 2)
+```
+
+
+### Indexing
+- Use square braces (`[]`) to index a vector (base 1)
+    - Indexing out-of-bounds returns a special value called `NA`, *does NOT*
+      fail
+```{r}
+X <- c(10, 11, 12, 13)
+X[1]
+X[4]
+X[5]  # Does NOT fail; but returns NA
+```
+
+- Negative indexing is used to exclude elements
+```{r}
+X[-1]
+```
+- Index multiple objects by indexing with a vector
+```{r}
+ind <- c(2, 4)
+X[ind]
+```
+
+## Built-in functions
+
+### Common functions 
+```{r, eval=FALSE}
+mean(X)                # mean
+sd(X)                  # standard deviation
+var(X)                 # variance
+max(X)                 # maximum
+min(X)                 # minimum
+median(X)              # median
+sum(X)                 # sum
+prod(X)                # product
+quantile(X,probs=0.5)  # quantile for specified probs
+length(X)              # length of the vector
+range(X)               # range
+
+log(X)   # element-wise log
+exp(X)   # element-wise exponential
+sqrt(X)  # element-wise square root
+```
+
+
+### Functions for strings
+
+```{r}
+# concatenate two (or more) strings
+paste('one plus one equals', 1+1, '!')
+
+# specify a separator
+paste('one plus one', 1+1, sep='=')
+
+# if you're into C-style formatting ...
+sprintf('one plus one = %d', 1+1)
+```
+
+- Often, we want to concatenate strings with no spaces
+(e.g., when constructing filenames/paths at run-time)
+```{r}
+# short-hand for concatenation w/o spaces
+filename = 'some_file_name.csv'
+paste0('path/to/', filename)
+
+# function specifically for constructing file paths
+file.path('path', 'to', filename)
+```
+
+### Generic Functions
+
+- Some functions for exploring objects
+```{r}
+obj <- 1:100
+head(obj, n=5)  # display first n rows of obj
+tail(obj, n=5)  # display last n rows of obj
+str(obj)  # display structure of obj
+summary(obj)  # display summary of obj
+```
+
+## Data frames
+
+- Data frames are the primary representation of data in `R`
+- You can think of a data frame as a two-dimensional *table* of data
+- It helps your sanity to always think of data frames as a table where
+```
+Each column represents a variable/feature
+Each row represents an observation/instance
+```
+
+- Conceptually, a data frame is also a collection of vectors, i.e.,
+each column is a vector that belongs to the (parent) data frame
+
+### Display Structure with `str()`
+- Let's start looking at the `txhousing` data frame
+- The `str()` function is useful for exploring the overall structure of a
+data frame
+```{r}
+str(txhousing)
+```
+
+### `Factor`s
+- Note that the city column should be a `factor` -- a data frame representation
+of categorical variables
+
+- Use `factor()` to force varaibles into factor variables
+```{r}
+txhousing$city <- factor(txhousing$city)
+```
+- The entries of a `factor` variable is defined by `levels`
+```{r, eval=FALSE}
+levels(txhousing$city)
+```
+
+
+
+## Packages
+
+### Installing `R` Packages
+- `R` has many (*MANY*) packages created by other users that implement
+state-of-the-art tools (e.g., data manipulation, statistical models)
+- These packages can be downloaded from the Comprehensive R Archive Network (CRAN)
+- This is as simple as running a single line of code:
+```{r, eval=FALSE}
+install.packages("package name")
+```
+- You will have to select one of many CRAN mirrors (copies across different
+servers) from which to download the package from
+- For example, to install the `tidyverse` package, run
+```{r, eval=FALSE}
+install.packages("tidyverse")
+```
+- You only need to do this *once* for each machine
+
+
+### Loading Packages
+- Once you've installed a package on a machine, you can load the package into
+your current workspace with the `library()` command
+- For example, to use the `tidyverse` package, first load it with
+```{r, eval=FALSE}
+library("tidyverse")
+```
+
+- You can also use specific functions from a package without loading it,
+  by telling `R` which package the function belongs to with a namespace prefix,
+  `package_name::`.
+- For example, to use the `round_any()` function from the `plyr` package,
+  without actually loading `plyr`, write
+```{r, eval=FALSE}
+# Assuming plyr is installed
+plyr::round_any()
+```
+
+
+
+-------------------------------------------------------------------------------
+
+# Data manipulation with `dplyr`
+
+## `dplyr` fundamentals
+- `dplyr` is a package that provides a convenient framework (along with a
+handful of useful functions) for wrangling data (frames)
+- `dplyr` is a part of the `tidyverse`, so if you load `tidyverse`, `dplyr` is
+also loaded
+- You can also, but don't have to, install and load the `dplyr` as a standalone
+package like you  would any other `R` package
+```{r, eval=FALSE}
+# Only need to do this once on a single machine.
+install.packages("dplyr")
+# load package into workspace
+library("dplyr")
+```
+
+### Data Frames: First Impression
+- We'll primarily use the `diamonds` data that's included with `tidyverse`
+- Take a look by typing `diamonds` in the `R` console
+- `diamonds` is a dataset containing the prices and other attributes of almost
+54,000 diamonds. Included variables are:
+    - price, carat, cut, color, clarity, dimensions (x, y, z, depth, table)
+
+- See documentation for more details
+```{r, eval=FALSE}
+?diamonds
+```
+
+### Verbs
+- A *verb* in the world of `dplyr` is a function that
+    - takes a data frame as its first argument, and
+    - returns another data frame as a result
+- For example, the `head()` function can be considered a verb
+```{r, eval=FALSE}
+head(diamonds, n = 3)
+```
+- Note that the result of the `head()` function is another data frame
+(in this case, with 3 rows)
+- The **core idea of `dplyr`** is that most of your data manipulation needs can
+be satisfied with 5 basic verbs (or 4, depending on how you categorize them)
+
+### Five basic verbs
+- The five basic verbs of `dplyr` and associated actions are presented below
+
+verb          | action
+----          | ------
+`filter()`    | select a subset of *rows* by specified conditions
+`select()`    | select a subset of *columns*
+`mutate()`    | create a *new column* (often from existing columns)
+`arrange()`   | reorder (sort) *rows* by values of specified *column*(s)
+`summarize()` | aggregate values and reduce to single value
+
+- Some verbs have additional options or convenient wrappers
+
+## Selecting rows (1/5)
+### Selecting Rows: `filter()`
+- Select a subset of *rows*
+- Multiple conditions can be used
+- Use `&` to specify `AND` conditions
+- Use `|` to specify `OR` conditions
+- `AND(&)`/`OR(|)` operations can be used together
+(where default behavior for multiple conditions is `AND`)
+```{r, eval=FALSE}
+filter(diamonds, cut == "Ideal" & carat > 3)
+filter(diamonds, carat <= .2 |  carat >= 3)
+filter(diamonds,
+       carat <= .2 |  carat >= 3, color == "D")
+```
+- Use `%in%` to match on a collection of values
+```{r, eval=FALSE}
+filter(diamonds, cut %in% c("Fair", "Ideal"))
+```
+
+
+### Selecting Rows: `slice()`
+- To select rows by numerical index (position), use `slice()`
+- For example, to select the first 10 rows
+```{r, eval=FALSE}
+slice(diamonds, 1:10)
+```
+- or to select the last 10 rows
+```{r, eval=FALSE}
+slice(diamonds, (n() - 9):n())
+```
+- Use `n()` inside a `dplyr` verb to to indicate the *number of rows* of the
+data frame
+
+## Selecting columns (2/5)
+### Selecting Columns: `select()`
+- Select a subset of *columns*
+- Either specify the columns that you want to select
+```{r, eval=FALSE}
+select(diamonds, cut, price)
+```
+- Or specify the columns you wish to drop
+```{r, eval=FALSE}
+select(diamonds, -x, -y, -z)
+```
+
+- `dplyr` provides useful helper functions you can use to `select()` columns
+that match specific criteria such as
+    - `starts_with(x)`: names that start with `x`
+    - `ends_with(x)`: names that end with `x`
+    - `contains(x)`: names that contain `x`
+    - `matches(x)`: names that match the (regular expression) `x`
+- See the documentation for more details
+```{r, eval=FALSE}
+?dplyr::select
+```
+- While you can assign new column names with `select()` the convenience function
+`rename()` lets you rename columns while retaining the rest of the data frame
+```{r, eval=FALSE}
+rename(diamonds, cut_type = cut)
+```
+
+## Creating new columns (3/5)
+### Create New Columns: `mutate()`
+- Create new columns, usually as a function of existing columns
+- You can refer to new columns you just created, inside the same `mutate()`
+function
+```{r, eval=FALSE}
+mutate(diamonds,
+       price_per_carat = price / carat,
+       volume = x * y * z,
+       # Use the volume column we just created
+       # to create a price_per_volume column
+       price_per_volume = price / volume)
+```
+- Use `transmute()` to create a new data frame *just from* the new column(s)
+```{r, eval=FALSE}
+transmute(diamonds, carat,
+          price_per_carat = price / carat)
+```
+
+## Sorting (4/5)
+### Sorting Rows by Column Value: `arrange()`
+- Reorder the rows of a data frame by the specified column"s value
+- Multiple conditions are arranged from left to right
+- Use `desc()` to arrange in descending order
+```{r, eval=FALSE}
+arrange(diamonds, carat, price)
+arrange(diamonds, carat, desc(price))
+arrange(diamonds, desc(carat), desc(price))
+```
+
+## Aggregating (5/5)
+### Aggregate Data: `summarize()`
+- Aggregate/collapse the data into a single row
+- Think of as applying a function to columns
+```{r}
+summarize(diamonds, avg_price = mean(price))
+```
+
+### Recap:
+- The five basic verbs:
+
+verb          | action
+----          | ------
+`filter()`    | select a subset of *rows* by specified conditions
+`select()`    | select a subset of *columns*
+`mutate()`    | create a *new column* (often from existing columns)
+`arrange()`   | reorder (sort) *rows* by values of specified *column*(s)
+`summarize()` | aggregate values and reduce to single value
+
+- But what about ...
+    - Average price of diamonds for each cut type?
+    - Largest (carat) diamond in each color category?
+    - ...
+
+## Split-Apply-Combine
+
+- A natural, but tedious way to compute:
+- Average price of diamonds for each cut type?
+    - use `filter` to create five different data frames, one for each `cut` type
+    - use `summarize` to compute the mean price for each data frame
+- Largest (carat) diamond in each color category?
+    - use `filter` to create seven different data frames, one for each
+    `color` category
+    - use `arrange` to sort in descending order of `carat` for each data frame
+    - use `slice` to get the first row from each of the `arrange`d data frames
+
+- The pattern:
+    - split the data, `group`ing `by` some categorical value
+    - do some operations, but to each category of the `group`
+
+### Grouped Operations
+- If a data frame is *grouped*, operations are applied to each group separately,
+and the results are combined back to a single data frame
+- The `group_by()` verb lets you specify the *grouping* variables (e.g., `cut`,
+`color`)
+```{r, results="hide"}
+diamonds_by_cut <- group_by(diamonds, cut)
+```
+- When the data frame is `group_by`'d, all verbs/functions will operate as if
+each category of the grouping variable is its own data frame, e.g.,
+
+verb          | group specific action
+------------- | ------------------------------------------------------
+`arrange()`   | sort rows within each group
+`slice()`     | extract rows within each group
+`summarize()` | aggregate values group-wise
+`n()`         | count the number of rows in each group
+
+### Grouped `slice()`
+- Retrieve one diamond from each cut
+```{r}
+slice(diamonds_by_cut, 1)
+```
+
+### Grouped `summarize()`
+- Retrieve (1) number of diamonds and (2) average price by cut type
+```{r}
+summarize(diamonds_by_cut,
+          count = n(),
+          avg_price = mean(price))
+```
+
+## Multiple (Chained) Operations
+- Wish to compute: Proportion of different `color`s in each `cut` category
+
+- We can achieve the desired result with a few operations
+    1. **`group_by`** `cut`
+    2. **`mutate`** to create a column with total diamonds for each `cut`
+    3. re-**`group_by`** `cut` and `color`
+    4. Use the new column from above to `summarize` the proportion of each
+    `color` within each `cut`
+
+- Note that `dplyr` verbs do **not** modify the original data frame (i.e., they
+don't have side effects)
+    - This is generally a good thing, since it guarantees the integrity of your data
+    - But it makes multiple operations on a data frame difficult
+
+### Multiple Operations: The OK Way
+- One way to perform multiple operations is to save intermediate data frames as
+new data frames
+- This method delivers desired results, but makes your workspace quite messy
+(i.e., you"ll end up with a workspace full of intermediate results)
+```{r, eval=FALSE}
+by_cut <- group_by(diamonds, cut)
+count_cuts <- mutate(by_cut, N = n())
+by_cut_and_color <- group_by(count_cuts, cut, color)
+proportions <- summarize(by_cut_and_color,
+                         prop = mean(n()/N))
+```
+- This method might be prefered if you need the intermediate results in
+the future
+- If not, there is a better way to chain multiple operations with `dplyr`
+
+### The Pipe Operator `%>%`
+- The pipe operator, takes the output from its left-hand side, and uses it as
+the first argument to whatever is on its right-hand side[^pipe]
+- For example:
+```{r, eval=FALSE}
+by_cut <- group_by(diamonds, cut)
+count_cuts <- mutate(by_cut, N = n())
+```
+is equivalent to
+```{r, eval=FALSE}
+count_cuts <- diamonds %>%
+  group_by(cut) %>%
+  mutate(N = n())
+```
+(except in the second case, the `by_cut` data frame is never created)
+
+[^pipe]: `Ctrl + Shift + M` will insert `%>%` in Rstudio
+
+- Using the pipe, we can complete the entire task without saving any
+intermediate data frames
+```{r, eval=FALSE}
+proportions <- diamonds %>%
+  group_by(cut) %>%
+  mutate(N = n()) %>%
+  group_by(cut, color) %>%
+  summarize(prop = mean(n()/N))
+```
+- No need to save intermediate results
+- Easier to read (i.e., you can follow the operations step-by-step without too
+much mental accounting)
+
+## Exercise: `dplyr` {.tabset .tabset-fade .tabset-pills}
+
+### Questions
+
+1. Find the most expensive diamond for each `cut`.
+1. How many 1 carat diamonds are "Premium" `cut`, and what are the min/median/max
+prices?
+1. What is the average price for diamonds grouped by 0.1 `carat`s?
+
+
+### Solution 1
+- Find the most expensive diamond for each `cut`.
+```{r}
+diamonds %>%
+  group_by(cut) %>%
+  arrange(desc(price)) %>%
+  slice(1)
+```
+
+### Solution 2
+- How many 1 carat diamonds are "Premium" `cut?
+```{r}
+diamonds %>%
+  filter(carat == 1, cut == "Premium") %>%
+  summarize(N = n(),
+            min = min(price),
+            med = median(price),
+            max = max(price))
+```
+
+### Solution 3
+- What is the average price for diamonds grouped by 0.1 `carat`s?
+```{r}
+diamonds %>%
+  mutate(carat_bin = round(carat, digits = 1)) %>%
+  group_by(carat_bin) %>%
+  summarize(avg_price = mean(price))
+```
+
+-------------------------------------------------------------------------------
+
+# Visualization with `ggplot2`
+
+- For this session, we'll mainly use the `quakes` dataset included with your `R`
+installation and the `mpg` and `economics` datasets included with `ggplot2`
+- The `quakes` dataset contains the location (long/lat), depth (Km), Richter
+Magnitude, and ID of reporting station for 1,000 seismic events near Fiji since
+1964
+- The `economics` dataset contains monthly US economic time series data
+- The `mpg` dataset contains a subset of the fuel economy data made public via
+http://fueleconomy.gov
+- Take a look at each data set and accompanying documentation
+```{r, eval=FALSE}
+?quakes
+?economics
+?mpg
+```
+
+
+## `ggplot2` basics
+
+- You can install and load the `ggplot2` package like you would any other 
+  `R` package
+- `ggplot2` is a part of the `tidyverse`, so if you load `tidyverse`, `ggplot2`
+  is also loaded
+- You can also, but don't have to, install and load the `ggplot2` as a
+  standalone package like you  would any other `R` package
+```{r, eval=FALSE}
+install.packages('ggplot2')
+library('ggplot2')
+```
+
+
+### The `ggplot` Object
+
+- The basic concept of `ggplot2` is that you define a `ggplot` object, to which
+you can *add* various elements (e.g., data, visual markings, labels) as layers
+- First, you start by defining an empty `ggplot` object with the initializing
+function `ggplot(data)`
+```{r}
+p <- ggplot(data = quakes)
+```
+- Note that
+    - The `ggplot` object is assigned to a variable (in this case `p`). The
+    object exists in the workspace, and the *plot* is only generated when you
+    *print* the object itself (i.e., if you type `p` in the console).
+    - An initial `ggplot` object is blank, equivalent to a brand new canvas.
+
+
+### `aes`thetic Mappings
+
+- A key concept that follows the `ggplot` object is `aes`thetic (`aes`) mappings
+- `aes` mappings tell the `ggplot` object where to find the inputs for certain
+elements of the plot (e.g., $x$-axis coordinates, colors)
+- For example, from the `quakes` data set, if we want to have the `depth` on
+the $x$-axis and `mag` on the $y$-axis, we could initialize our `ggplot` object as
+```{r}
+p <- ggplot(quakes, aes(x = depth, y = mag))
+```
+- Note that
+    - `aes()` itself is a function that returns a mapping object, which is used
+    as an argument in the `ggplot()` intialization
+    - arguments within the `aes()` call can be column (variable) names
+    - the `ggplot` object `p` is still blank: we haven't specified how we want
+    $x$ and $y$ to be visualized
+
+
+### Adding `geom`etries (and other elements)
+
+- The building blocks of visual elements in `ggplot2` are `geom`etries
+- `geom`etries define markings (e.g., points, lines) to be made on the *canvas*
+- Elements such as `geom`etries are (literally) **added** to existing
+`ggplot` objects
+- For example
+```{r}
+p <- ggplot(quakes, aes(x = depth, y = mag)) +
+  geom_point()  # add 'point' geometry to p
+```
+- We'll explore different `geom`etries and visual markings that can be
+**addedd** to `ggplot` objects in the following sections
+
+
+### Saving Plots
+
+- You can save any plot from RStudio with Export > Save As ... or something
+like that
+- That method of saving plots doesn't scale well, for obvious reasons, **so
+don't do it!**
+- Use `ggsave()` to save plots to files
+```{r, eval=FALSE}
+ggsave('my_plot.png',
+       width = 5,
+       height = 5,
+       plot = p)
+```
+
+- `ggsave()` is smart enough to determine the filetype from the extension of the
+filename that you specify (`png` in the above example)
+- While many formats are supported, `png` and `pdf` are most commonly used
+- Read the docs to harness the full power of `ggsave()`
+```{r, eval=FALSE}
+?ggsave
+```
+
+## Single-variable Plots
+
+### Histograms
+
+- Plot a simple histogram by specifying the $x$-axis variable, and adding the
+histogram geometry with `geom_histogram()`
+```{r, warning=FALSE, message=FALSE, fig.height=2}
+p <- ggplot(quakes, aes(x = stations)) +
+  geom_histogram()
+p
+```
+
+- Specify the size of each bin in the histogram with the `binwidth` argument
+in `geom_histogram()`
+```{r, warning=FALSE, message=FALSE, fig.height=2}
+p <- ggplot(quakes, aes(x = stations)) +
+  geom_histogram(binwidth = 10)
+p
+```
+
+- Notice that the default $y$-axis is `count`, i.e., the observation count of
+each bin
+- This can be changed by specifying the `aes()` mapping of `y`
+- For example, to  generate a density histogram such that the points of each bin
+integrates to 1, set `aes(y=..density..)`
+- For more options, see
+```{r}
+?geom_histogram
+```
+
+### Histogram with `aes(y=..density..)`
+```{r, warning=FALSE, message=FALSE, fig.height=2}
+p <- ggplot(quakes, aes(x = stations)) +
+  geom_histogram(binwidth = 10, aes(y = ..density..))
+p
+```
+
+
+## Exercise: single-variable plots {.tabset .tabset-fade .tabset-pills}
+
+### Questions
+
+1. Plot a density histogram of 1,000 random samples from a standard normal
+distribution using binwidth 0.5
+(hint: use `rnorm()`)
+2. Use `geom_density()` to plot the (smooth) density of the population
+(`pop`) variable from the  `economics` data
+
+### Solution 1
+```{r, fig.height=2}
+X <- tibble(x = rnorm(1000))
+p <- ggplot(data = X, aes(x = x)) +
+  geom_histogram(binwidth = 0.5, aes(y = ..density..))
+p
+```
+
+### Solution 2
+```{r, fig.height=2}
+p <- ggplot(data = economics, aes(x = pop)) +
+  geom_density()
+p
+```
+
+## 2+ variables
+
+### Points with `geom_point()`
+- Plot points on a 2D plane by specifying variables corresponding to the $x$
+and $y$-axis, and adding the point geometry with `geom_point()`
+```{r, warning=FALSE, message=FALSE, fig.height=2}
+p <- ggplot(quakes, aes(x = long, y = lat)) +
+  geom_point()
+p
+```
+
+- Popular `aes`thetics for `geom_point()` are
+    - `alpha`: point visibility; 0 = invisible, 1 = opaque
+    - `color`: color of the points (try `colors()` to see a list of some
+    pre-defined colors)
+    - `shape`: shape of the points (predefined, see  next slide for reference)
+    - `size`: size of the points
+    - `fill`: color used to fill-in the points (only applies to certain shapes,
+    i.e., shape numbers 21 to 25)
+
+### Reference: Shapes
+```{r, echo=FALSE, warning=FALSE}
+d <- tibble(p = c(0:25, 32:127))
+ggplot() +
+  scale_y_continuous(name = "", breaks = NULL) +
+  scale_x_continuous(name = "", breaks = NULL) +
+  scale_shape_identity() +
+  geom_point(data = d,
+             mapping = aes(x = p %% 16, y = p %/% 16, shape = p),
+             size = 2, fill = "red") +
+  geom_text(data = d,
+            mapping = aes(x = p %% 16, y = p %/% 16 + 0.25, label = p),
+            size = 1.5)
+```
+
+### Lines with `geom_line()`
+- Similarly, plot lines on a 2D plane by specifying variables corresponding to
+the $x$ and $y$-axis, and adding the line geometry with `geom_line()`
+```{r, warning=FALSE, message=FALSE, fig.height=2}
+p <- ggplot(economics, aes(x = date, y = unemploy)) +
+  geom_line()
+p
+```
+
+- Popular `aes`thetics for `geom_point()` are
+    - `alpha`: line visibility; 0 = invisible, 1 = opaque
+    - `color`: color of the lines
+    - `linetype`: shape of lines (predefined, see  next slide for reference)
+    - `size`: size (thickness) of the lines
+
+### Reference: Linetypes
+```{r, echo=FALSE, warning=FALSE}
+d <- tibble(lt = c("blank", "solid", "dashed", "dotted", "dotdash", "longdash",
+                   "twodash", "1F", "F1", "4C88C488", "12345678"))
+ggplot() +
+  scale_x_continuous(name = "", limits = c(0, 1), breaks = NULL) +
+  scale_y_discrete(name = "linetype") +
+  scale_linetype_identity() +
+  geom_segment(data = d,
+               mapping = aes(x = 0, xend = 1, y = lt, yend = lt, linetype = lt))
+```
+
+### A Note on `data` and `aes()` Arguments
+- The `data` and `aes()` arguments, can be declared globally in the `ggplot()`
+function, or locally in each `geom`etry function
+- Also, `aes`thetics can be either
+    - mapped to a variable *globally*, i.e., in  `ggplot(aes())`
+    - mapped to a variable *locally*, i.e., in `geom_*(aes())`, or
+    - defined explicitly for a local `geom_*()`, outside of `aes()`
+- It's critical to understand the difference between 'mapping' an aesthetic and
+'explicitly defining' one as an argument
+
+### Example: Global `aes()` mapping
+```{r, eval=FALSE}
+p <- ggplot(quakes, aes(x = long, y = lat, size = mag)) +
+  geom_point(alpha = .3)
+p
+```
+- the `data` and `aes`thetic mappings for `x`, `y`, and `size` are defined
+globally in `ggplot()`
+- this means any `geom_*` added to this `ggplot` will have the specified `x`,
+`y`, and `size` `aes`thetic *mappings*, unless assigned otherwise within their
+own `geom_*()` function
+- the `alpha` `aes`thetic for `geom_point`, on the other hand, is defined
+**explicitly** (i.e., it is **set** to 0.3, and not mapped to a variable)
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3}
+p <- ggplot(quakes, aes(x = long, y = lat, size = mag)) +
+  geom_point(alpha = .3)
+p
+```
+
+### Example: Local `aes()` mapping
+```{r, eval=FALSE}
+p <- ggplot(quakes, aes(x = long, y = lat)) +
+  geom_point(alpha = .3, aes(size = mag)) +
+  geom_point(size = 1, aes(color = stations))
+p
+```
+- Here, the `data` and `aes`thetic mappings for `x` and `y` are defined
+globally in `ggplot()`
+- But the `aes`thetic mapping/value for `size` is defined locally for each
+specific `geom_point()`
+- The first `geom_point()` maps `size` to the `mag` variable, which means the
+size of the points will depend on the corresponding value of `mag`
+- The second `geom_point()` explicitly assigns `size` to the fixed value 1, but
+maps the `color` `aes`thetic to the `stations` variable
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3.5}
+p <- ggplot(quakes, aes(x = long, y = lat)) +
+  geom_point(alpha = .3, aes(size = mag)) +
+  geom_point(size = 1, aes(color = stations))
+p
+```
+
+## Exercise: 2+ variables {.tabset .tabset-fade .tabset-pills}
+
+### Questions
+1. With the `mpg` dataset, generate a scatter plot with `hwy` on the $x$-axis
+and `cty` on the $y$-axis. Let the `color` represent to `class` and `size`
+represent `cyl`. Also set `alpha=.3`.
+
+```{r, echo=FALSE}
+p <- ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point(alpha = .3, aes(color = class, size = cyl))
+p
+```
+
+2. From the `quakes` plot on the previous slide, replace the blue colored
+points with *one big red star* (size=5, shape=8) showing which location had
+the largest magnitude
+(hint: you'll need to crate another data frame consisting of the single
+observation you wish to plot)
+
+```{r, echo=FALSE}
+quakes_max_mag <- quakes %>%
+  arrange(desc(mag)) %>%
+  slice(1)
+
+p <- ggplot(quakes, aes(x = long, y = lat)) +
+  geom_point(alpha = .3, aes(size = mag)) +
+  geom_point(data = quakes_max_mag,
+             size = 5,
+             color = 'red',
+             shape = 8)
+p
+```
+
+
+### Solution 1
+```{r}
+p <- ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point(alpha = .3,
+             aes(color = class, size = cyl))
+p
+```
+
+### Solution 2
+```{r}
+# Find the largest magnitude observation
+quakes_max_mag <- quakes %>%
+  arrange(desc(mag)) %>%
+  slice(1)
+
+# Generate plot
+p <- ggplot(quakes, aes(x = long, y = lat)) +
+  geom_point(alpha = .3, aes(size = mag)) +
+  geom_point(data = quakes_max_mag,
+             size = 5,
+             color = 'red',
+             shape = 8)
+p
+```
+
+
+## Labels, Scales, and More
+
+### Labels
+- Three major labels on a plot would be
+    1. Plot title: use `ggtitle('title')`
+    2. $x$-axis label: use `xlab('x label')`
+    3. $y$-axis label; use `ylab('y label')`
+
+- Or, to do all of the above in a single line, use
+```{r, eval=FALSE}
+labs(title='title', x='x label', y='y label')
+```
+
+- `paste()` or `sprintf()` functions could be useful if you want to construct
+labels from data
+
+```{r, fig.height=2.5, fig.width=5}
+p <- ggplot(economics, aes(x = date, y = unemploy)) +
+  geom_line() +
+  labs(title = 'Unemployment by time',
+       x = 'Date (by month)',
+       y = 'Unemployment')
+p
+```
+
+
+### Scales
+- The mapping between data and `aes`thetics is controled via **scales**
+- The `scales` package provides many helpful functions when working with scales
+```{r, eval=FALSE}
+# Install, if you haven't already.
+# Only need to do this once on a single machine.
+install.packages('scales')
+# load package into workspace
+library('scales')
+```
+
+- The general syntax for setting scales is
+```{r, eval=FALSE}
+scales_{aes name}_{some option}(
+    # name of legend/axis
+    name = ...
+    # range of data values to map
+    limits = ...
+    # what aesthetic values to use for the limits
+    values = ...
+    # where to mark legend/axis
+    breaks = ...
+    # what to label the marks (breaks)
+    labels = ...
+)
+```
+- Some scales have specific arguments/convenience functions
+- Be sure to checkout the documentation!
+
+### Axis Specific Scales
+
+- There are scales specifically for controling the $x$/$y$-axes (examples are
+given for $x$, but can be used for $y$ by substituting $x$ for $y$)
+    - `scale_x_log10()`: Plot $x$ on `log10` scale
+    - `scale_x_reverse()`: Reverse the direction of the $x$ axis
+    - `scale_x_sqrt()`: Plot $x$ on square root scale
+    - `scale_x_date(labels=date_format("%m/%d"), `
+    `breaks=date_breaks("2 weeks"))`: For axes in date format.
+    See `?strptime` for label formats, and `scale_x_date` for more details
+
+
+- For example, to plot `unemploy` against `date`, but mark the $x$ axis for
+every 15 years, we would write
+```{r}
+p <- ggplot(economics, aes(x = date, y = unemploy)) +
+  geom_line() +
+  scale_x_date(labels = scales::date_format('%Y'),
+               breaks = scales::date_breaks("15 years"))
+p
+```
+
+
+### General Purpose Scales
+- Scales for specific `aes`thetics can be controled with the following functions
+(where `*` should be replaced with the desired `aes`thetic, e.g., `color`,
+`shape`)
+    - `scale_*_continuous()`: map continuous values to visual values
+    - `scale_*_discrete()`: map discrete values to visual values
+    - `scale_*_identity()`: map raw data to visual values
+    (e.g., a data value of 1 equals shape #1)
+    - `scale_*_manual()`: map discrete values to manually assigned visual values
+
+### Scales: Example
+- For example, with the `mpg` data, we wish to plot `hwy` against `cty`, with
+red points for `class=suv` and blue points otherwise
+```{r}
+# First, create a new column in the data indicating
+# whether the entry has class suv or not
+mpg_suv <- mpg %>%
+  mutate(issuv = class == 'suv')
+# Generate the plot with a manual color scale
+p <- ggplot(mpg_suv, aes(x = hwy, y = cty)) +
+  geom_point(aes(color = issuv)) +
+  scale_color_manual(limits = c(FALSE, TRUE),
+                     values = c('blue', 'red'),
+                     breaks = c(TRUE, FALSE),
+                     labels = c('SUV', 'Other'))
+p
+```
+
+
+### Legends: Positions
+- Changing legend position
+- The `legend.justification` determines the 'anchor point' of the legend
+- Takes a vector of two numbers between 0 and 1, where the first determines
+left(0)/right(1) and the second determines bottom(0)/top(1)
+- For example, setting `legend.justification` to `c(0, 0)` would anchor the
+legend at left/bottom, while `c(1, 0)` would anchor the legend at right/bottom
+```{r, eval=FALSE}
+# specify either top/left/bottom/right, e.g.,
+p <- p + theme(legend.position='top')
+# or set x/y coordinates to position within plot
+p <- p + theme(legend.position=c(0,1),
+               legend.justification=c(0,0))
+```
+
+### Legends: Position Top Example
+```{r}
+p <- ggplot(mpg_suv, aes(x = hwy, y = cty)) +
+  geom_point(aes(color = issuv)) +
+  scale_color_manual(limits = c(FALSE, TRUE),
+                     values = c('blue', 'red'),
+                     breaks = c(TRUE, FALSE),
+                     labels = c('SUV', 'Other')) +
+  theme(legend.position = 'top')
+p
+```
+
+
+### Legends: Position Example
+```{r}
+p <- ggplot(mpg_suv, aes(x = hwy, y = cty)) +
+  geom_point(aes(color = issuv)) +
+  scale_color_manual(limits = c(FALSE, TRUE),
+                     values = c('blue', 'red'),
+                     breaks = c(TRUE, FALSE),
+                     labels = c('SUV', 'Other')) +
+  theme(legend.position = c(1, 0))
+p
+```
+
+
+### Legends: Position Example
+```{r}
+p <- ggplot(mpg_suv, aes(x = hwy, y = cty)) +
+  geom_point(aes(color = issuv)) +
+  scale_color_manual(limits = c(FALSE, TRUE),
+                     values = c('blue', 'red'),
+                     breaks = c(TRUE, FALSE),
+                     labels = c('SUV', 'Other')) +
+  theme(legend.position = c(1, 0),
+        legend.justification = c(1, 0))
+p
+```
+
+
+### Legends: Guides
+- `guides()` is used to set the legend type for specific `aes`thetics
+- A common use-case is, for example, to hide legends by setting the `aes`thetic
+to `none` in `guides()`, e.g.,
+```{r}
+# Hide color legends
+p <- p + guides(color = 'none')
+```
+
+### Legends: Scales
+- As shown in the scales section, we can specify the title/breaks/labels for a
+legend, using the `scale_*_` of the  corresponding `aes`thetic, e.g.,
+```{r, eval=FALSE}
+# To modify legend title/labels for a
+# continuous variable applied to color aes()
+p <- p + scale_color_continuous(
+  name = 'legend title',
+  breaks = c(1, 5),  # vector of points to label
+  labels = c('low', 'high')  # corresponding labels
+  )
+```
+
+
+### Legends (Example)
+```{r}
+p <- ggplot(quakes, aes(x = long, y = lat)) +
+  geom_point(alpha = .6,
+             aes(size = mag, color = depth)) +
+  scale_size_continuous(name = 'Magnitude',
+                        breaks = c(4, 6),
+                        labels = c('small', 'big')) +
+  theme(legend.position = c(0, 0),
+        legend.justification = c(0, 0)) +
+  guides(color = 'none')
+p
+```
+
+
+### Legends: Remarks
+- *Lots* of legend options (and more!) can be controlled via `theme()`
+- Get familiar with the options in `?theme`
+
+
+## Facets
+
+- Facets let you divide a plot into subplots based on the values of a (discrete)
+variable
+- The notation is
+```{r, eval=FALSE}
+# Divide into subplots of 2D grid
+# using upto two variables
+facet_grid( var.row ~ var.col)
+
+# Wrap into a rectangular layout
+# using a single variable
+facet_wrap( ~ var, nrow = NULL, ncol = NULL)
+```
+
+- `var.row` is the name of the variable to use to divide the rows
+- `var.col` is the name of the variable to use to divide the columns
+- Substitute with '`.`' to skip either row or column division
+- Best demonstrated with examples ...
+
+- `facet_grid()` with one variable (columns)
+```{r}
+p <- ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point() +
+  facet_grid(. ~ cyl)
+p
+```
+
+- `facet_grid()` with one variable (rows)
+```{r}
+p <- ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point() +
+  facet_grid(year ~ .)
+p
+```
+
+
+- `facet_grid()` with two variables
+```{r}
+p <- ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point() +
+  facet_grid(year ~ cyl)
+p
+```
+
+
+- `facet_wrap()`
+```{r}
+p <- ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point() +
+  facet_wrap(~ fl)
+p
+```
