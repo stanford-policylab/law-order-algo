@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Created: 2019-01-28
 # Description: Download data necessary for notebooks
