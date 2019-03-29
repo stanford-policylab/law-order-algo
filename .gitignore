@@ -9,6 +9,7 @@
 
 # Data files
 *.rds
+*.csv
 
 # Other files
 *.swp
