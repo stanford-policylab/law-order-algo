@@ -7,5 +7,9 @@
 # Notebook files
 .ipynb_checkpoints/
 
+# Data files
+*.rds
+*.csv
+
 # Other files
 *.swp
