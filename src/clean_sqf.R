@@ -82,9 +82,8 @@ clean_df <- full_df %>%
   select(!!!keep_cols) %>%
   filter(year >= 2008, year <= 2011) %>%
   mutate(
-    hour = substring(time, 1, 2),
-    month = substring(date, 6, 7),
-    year = as.character(year),
+    hour = as.integer(substring(time, 1, 2)),
+    month = as.integer(substring(date, 6, 7)),
     suspect_race = factor(
       plyr::mapvalues(
         suspect_race,
