@@ -22,6 +22,7 @@ clean_df <- origin_df %>%
   select(id, sex, dob, age, race,
          recid_score = decile_score,
          violence_score = v_decile_score,
+         priors_count,
          is_recid,
          is_violent_recid) %>%
   filter(complete.cases(.))
