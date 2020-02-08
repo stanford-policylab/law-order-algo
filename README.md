@@ -1,5 +1,5 @@
-# Law, bias, and algorithms
-Course material for Law, Bias, and Algorithms
+# Law, order, and algorithms
+Course material for Law, Order, and Algorithms
 
 ## Initializing
 
